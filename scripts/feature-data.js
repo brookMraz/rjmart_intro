@@ -6,7 +6,7 @@ window.siteConfig = {
   loginUrl: 'https://www.rjmart.cn/Login',
   officialSiteUrl: 'https://www.rjmart.cn/',
   companySiteUrl: 'https://www.rjmart.net/',
-  heroIntroVideoSrc: './asset/videos/锐竞采购平台介绍视频.mp4',
+  heroIntroVideoSrc: 'https://dlfile.rjmart.cn/PVideo/%E9%94%90%E7%AB%9E%E9%87%87%E8%B4%AD%E5%B9%B3%E5%8F%B0%E4%BB%8B%E7%BB%8D%E8%A7%86%E9%A2%91.mp4',
   bizClueSubmitUrl: '/store/oms/bizClue/submit',
   bizClueSource: 2,
   bizClueChannel: 4,

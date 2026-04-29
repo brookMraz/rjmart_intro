@@ -14,8 +14,8 @@ Key assets:
 - `images/全链路闭环.png`, `images/移动端审批.png`, `images/竞价询价.png`,
   `images/无纸化报销.png`, `images/审批流定制.png`, `images/系统对接.png`,
   `images/危化品管理.png`: feature carousel images.
-- `videos/锐竞采购平台介绍视频.mp4`: hero intro video. This file is tracked by
-  Git LFS and may be a pointer until `git lfs pull` runs.
+- Hero intro video is loaded from
+  `https://dlfile.rjmart.cn/PVideo/%E9%94%90%E7%AB%9E%E9%87%87%E8%B4%AD%E5%B9%B3%E5%8F%B0%E4%BB%8B%E7%BB%8D%E8%A7%86%E9%A2%91.mp4`.
 
 Replacement workflow:
 
