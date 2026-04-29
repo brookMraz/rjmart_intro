@@ -35,6 +35,7 @@ const API_CONFIG = {
 
 const AUTH_TOKEN_KEY = 'token';
 const CURRENT_USER_ID_KEY = 'current_user_id';
+const BROWSER_ID_KEY = 'rj_browser_id';
 
 function getAuthToken() {
   return localStorage.getItem(AUTH_TOKEN_KEY) || '';
@@ -42,6 +43,17 @@ function getAuthToken() {
 
 function getCurrentUserId() {
   return localStorage.getItem(CURRENT_USER_ID_KEY) || '';
+}
+
+function getBrowserId() {
+  let id = localStorage.getItem(BROWSER_ID_KEY);
+  if (!id) {
+    id = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID().replace(/-/g, '')
+      : Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem(BROWSER_ID_KEY, id);
+  }
+  return id;
 }
 
 // ==================== rjk 签名 ====================
@@ -60,28 +72,9 @@ const RjkHeader = {
     return hash;
   },
 
-  hasNonAsciiChar(str) {
-    if (!str) return false;
-    for (let i = 0; i < str.length; i++) {
-      if (str.charCodeAt(i) > 127) return true;
-    }
-    return false;
-  },
-
-  encodeIfNeeded(str) {
-    if (!str || typeof str !== 'string') return str || '';
-    if (this.hasNonAsciiChar(str)) {
-      try {
-        return btoa(unescape(encodeURIComponent(str)));
-      } catch (_) {
-        return str;
-      }
-    }
-    return str;
-  },
-
   /**
    * 生成 rjk 请求头的值
+   * 与已有项目 Uts.setEncryValidateHeader 保持一致
    * @param {object} options
    * @param {string} options.token   当前 token
    * @param {string|object} options.data 请求数据
@@ -95,19 +88,17 @@ const RjkHeader = {
     const tokenLength = token.length || 0;
 
     const dataStr = typeof data === 'string' ? data : JSON.stringify(data || '');
-    const encodedData = this.encodeIfNeeded(dataStr);
-    const dataHash = this.simpleEncode(encodedData);
 
-    const encodedUserFlag = this.encodeIfNeeded(String(userFlag || ''));
+    const browserId = userFlag || getCurrentUserId() || getBrowserId();
     const isSelenium = window.navigator?.webdriver ? 1 : 0;
 
     const parts = [
       version,
       this.simpleEncode(String(ts)),
       String(hasToken) + ts,
-      dataHash,
+      this.simpleEncode(dataStr),
       tokenLength,
-      encodedUserFlag,
+      browserId,
       isSelenium,
     ];
     const joined = parts.join('.');
@@ -218,7 +209,11 @@ async function request(url, options = {}) {
     }
 
     // 解析响应
-    const result = await response.json();
+    const text = await response.text();
+    if (!text) {
+      return null;
+    }
+    const result = JSON.parse(text);
 
     // 业务状态码判断（适配 { code, data, msg } 格式）
     if (result && typeof result.code !== 'undefined' && result.code !== 200) {
