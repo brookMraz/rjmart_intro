@@ -1,13 +1,31 @@
 import { byId } from './dom-utils.js';
-import { api } from './request.js?v=202604303';
+import { api } from './request.js?v=202604304';
 
-function resolveFooterDomain(config) {
-  if (config.websiteBottomConfigDomain) {
-    return config.websiteBottomConfigDomain;
+function appendDomain(domains, domain) {
+  if (domain && !domains.includes(domain)) {
+    domains.push(domain);
   }
+}
+
+function getFallbackFooterDomain(config) {
+  const fallbackDomains = config.websiteBottomConfigFallbackDomains || {};
+  return window.location.hostname.endsWith('.rjmart.cn')
+    ? fallbackDomains.production
+    : fallbackDomains.test;
+}
+
+function resolveFooterDomains(config) {
+  const domains = [];
+  appendDomain(domains, config.websiteBottomConfigDomain);
+  appendDomain(domains, window.location.hostname);
+  appendDomain(domains, getFallbackFooterDomain(config));
 
   const origin = window.location.origin;
-  return origin === 'null' ? window.location.href : origin;
+  if (!domains.length) {
+    appendDomain(domains, origin === 'null' ? window.location.href : origin);
+  }
+
+  return domains;
 }
 
 async function fetchWebsiteBottomConfig(config) {
@@ -15,8 +33,24 @@ async function fetchWebsiteBottomConfig(config) {
     return null;
   }
 
-  const domain = resolveFooterDomain(config);
-  return api.post(config.websiteBottomConfigUrl, { domain }, { silent: true });
+  const domains = resolveFooterDomains(config);
+  let lastError = null;
+  for (const domain of domains) {
+    try {
+      const response = await api.post(config.websiteBottomConfigUrl, { domain }, { silent: true });
+      if (isValidWebsiteBottomConfig(response)) {
+        return response;
+      }
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+
+  return null;
 }
 
 function getWebsiteBottomRows(response) {
@@ -24,17 +58,8 @@ function getWebsiteBottomRows(response) {
   return Array.isArray(rows) ? rows : [];
 }
 
-function hasRequiredFooterLegalContent(fragment) {
-  const text = fragment.textContent || '';
-  return [
-    'Copyright',
-    'ICP备',
-    '公网安备',
-    '增值电信业务许可证',
-    '互联网诚信',
-    '药品信息服务资格证书',
-    '备案编号'
-  ].every(token => text.includes(token));
+function isValidWebsiteBottomConfig(response) {
+  return response?.websiteStatus === 1 && getWebsiteBottomRows(response).length > 0;
 }
 
 function createFooterBottomNode(bottom) {
@@ -102,7 +127,7 @@ function applyWebsiteBottomConfig(response) {
     fragment.appendChild(rowNode);
   });
 
-  if (!fragment.children.length || !hasRequiredFooterLegalContent(fragment)) {
+  if (!fragment.children.length) {
     return false;
   }
 

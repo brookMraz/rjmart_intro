@@ -16,7 +16,7 @@
 // ==================== 配置 ====================
 
 // 根据当前域名自动判断环境
-const isProduction = window.location.hostname === 'www.rjmart.cn';
+const isProduction = ['www.rjmart.cn', 'srpp.rjmart.cn'].includes(window.location.hostname);
 const isLocalPreview = ['127.0.0.1', 'localhost'].includes(window.location.hostname);
 
 const API_CONFIG = {

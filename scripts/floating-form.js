@@ -1,5 +1,5 @@
 import { $, $$, byId } from './dom-utils.js';
-import { api } from './request.js?v=202604303';
+import { api } from './request.js?v=202604304';
 
 const FOCUS_AFTER_PANEL_SWITCH_MS = 100;
 

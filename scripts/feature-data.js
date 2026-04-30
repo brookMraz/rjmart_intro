@@ -10,7 +10,11 @@ window.siteConfig = {
   bizClueSubmitUrl: '/store/oms/bizClue/submit',
   bizClueSource: 2,
   bizClueChannel: 4,
-  websiteBottomConfigDomain: 'www.test.rj-info.com',
+  websiteBottomConfigDomain: window.location.hostname,
+  websiteBottomConfigFallbackDomains: {
+    test: 'srm.test.rj-info.com',
+    production: 'srm.rjmart.cn'
+  },
   websiteBottomConfigUrl: '/store/config/anonymous/getWebsiteBottomConfigs'
 };
 
