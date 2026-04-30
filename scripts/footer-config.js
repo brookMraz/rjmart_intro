@@ -1,5 +1,5 @@
 import { byId } from './dom-utils.js';
-import { api } from './request.js?v=202604285';
+import { api } from './request.js?v=202604303';
 
 function resolveFooterDomain(config) {
   if (config.websiteBottomConfigDomain) {
@@ -16,16 +16,7 @@ async function fetchWebsiteBottomConfig(config) {
   }
 
   const domain = resolveFooterDomain(config);
-  return api.post(
-    config.websiteBottomConfigUrl,
-    { domain },
-    {
-      silent: true,
-      headers: {
-        'x-router-rule-data': domain
-      }
-    }
-  );
+  return api.post(config.websiteBottomConfigUrl, { domain }, { silent: true });
 }
 
 function getWebsiteBottomRows(response) {

@@ -1,5 +1,5 @@
 import { applySiteConfig, bindHeroIntroVideoSource } from './site-config.js?v=202604287';
-import { initFeatureCarousel } from './feature-carousel.js?v=202604287';
+import { initFeatureCarousel } from './feature-carousel.js?v=202604302';
 import { initFloatingForm } from './floating-form.js?v=202604287';
 import { initHeroVideoModal } from './hero-video.js?v=202604287';
 import { loadWebsiteBottomConfig } from './footer-config.js?v=202604287';

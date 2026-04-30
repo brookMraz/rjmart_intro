@@ -1163,7 +1163,14 @@
       color: #495870;
       font-size: 18px;
       line-height: 28px;
-      white-space: pre-line;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin: 0;
+    }
+
+    .feature-desc-line {
+      display: block;
     }
 
     .feature-nav-buttons {

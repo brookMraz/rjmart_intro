@@ -4,11 +4,15 @@ const FEATURE_COPY_LEAVE_STAGGER_MS = 72;
 const FEATURE_COPY_SEG_LEAVE_MS = 400;
 const FEATURE_COPY_LEAVE_PAD_MS = 48;
 const FEATURE_COPY_ENTER_ANIM_MS = 320;
+const FEATURE_AUTOPLAY_INTERVAL_MS = 3000;
 
 const state = {
   currentFeature: 0,
   featureCopyAnimationTimer: null,
-  featureCopyRunId: 0
+  featureCopyRunId: 0,
+  featureAutoplayTimer: null,
+  featureAutoplayPaused: false,
+  featureAutoplayEventsBound: false
 };
 
 let features = [];
@@ -63,7 +67,15 @@ function buildFeatureCarousel() {
 
 function setFeatureCopyText(titleEl, descEl, titleText, descText) {
   titleEl.textContent = titleText;
-  descEl.textContent = descText;
+  const lines = String(descText || '').split('\n').filter(Boolean);
+  descEl.replaceChildren();
+
+  lines.forEach(lineText => {
+    const line = document.createElement('span');
+    line.className = 'feature-desc-line';
+    line.textContent = lineText;
+    descEl.appendChild(line);
+  });
 }
 
 function animateFeatureCopy(feature, immediate = false, onCopySwap = () => {}) {
@@ -161,22 +173,87 @@ function updateFeature(index, options = {}) {
   byId('next-btn')?.classList.toggle('disabled', index === features.length - 1);
 }
 
+function stopFeatureAutoplay() {
+  if (state.featureAutoplayTimer) {
+    clearTimeout(state.featureAutoplayTimer);
+    state.featureAutoplayTimer = null;
+  }
+}
+
+function canRunFeatureAutoplay() {
+  return features.length > 1 && !state.featureAutoplayPaused && document.visibilityState !== 'hidden';
+}
+
+function scheduleFeatureAutoplay() {
+  stopFeatureAutoplay();
+
+  if (!canRunFeatureAutoplay()) {
+    return;
+  }
+
+  state.featureAutoplayTimer = setTimeout(() => {
+    if (!canRunFeatureAutoplay()) {
+      return;
+    }
+
+    updateFeature((state.currentFeature + 1) % features.length);
+    scheduleFeatureAutoplay();
+  }, FEATURE_AUTOPLAY_INTERVAL_MS);
+}
+
+function restartFeatureAutoplay() {
+  stopFeatureAutoplay();
+  scheduleFeatureAutoplay();
+}
+
 function bindFeatureControls() {
   $$('.feature-tab').forEach((tab, index) => {
-    tab.addEventListener('click', () => updateFeature(index));
+    tab.addEventListener('click', () => {
+      updateFeature(index);
+      restartFeatureAutoplay();
+    });
   });
 
   byId('prev-btn')?.addEventListener('click', () => {
     if (state.currentFeature > 0) {
       updateFeature(state.currentFeature - 1);
     }
+    restartFeatureAutoplay();
   });
 
   byId('next-btn')?.addEventListener('click', () => {
     if (state.currentFeature < features.length - 1) {
       updateFeature(state.currentFeature + 1);
     }
+    restartFeatureAutoplay();
   });
+}
+
+function bindFeatureAutoplay() {
+  if (state.featureAutoplayEventsBound) {
+    return;
+  }
+
+  const section = byId('platform-features');
+  section?.addEventListener('mouseenter', () => {
+    state.featureAutoplayPaused = true;
+    stopFeatureAutoplay();
+  });
+  section?.addEventListener('mouseleave', () => {
+    state.featureAutoplayPaused = false;
+    scheduleFeatureAutoplay();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      stopFeatureAutoplay();
+      return;
+    }
+
+    scheduleFeatureAutoplay();
+  });
+
+  state.featureAutoplayEventsBound = true;
 }
 
 export function initFeatureCarousel(featureList) {
@@ -184,7 +261,9 @@ export function initFeatureCarousel(featureList) {
   renderFeatureTabs();
   buildFeatureCarousel();
   bindFeatureControls();
+  bindFeatureAutoplay();
   if (features.length) {
     updateFeature(0, { immediate: true });
+    scheduleFeatureAutoplay();
   }
 }
